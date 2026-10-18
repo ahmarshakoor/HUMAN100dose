@@ -34,6 +34,7 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--fg);outlin
 .kv span:first-child{color:var(--mut)}.kv span:last-child{font-weight:700;text-align:right}
 ul.w{margin:8px 0 0;padding-left:20px}
 .tag{display:inline-block;font-size:12px;border:1px solid var(--warn);color:var(--warn);border-radius:5px;padding:3px 9px;margin-top:6px}
+.tag.ad{border-color:var(--mut);color:var(--mut);margin-top:0;margin-left:6px}
 .alert svg{flex:none;width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .alert{display:flex;align-items:center;gap:8px;margin-top:10px;background:var(--warnbg);color:var(--warn);border:0;border-left:3px solid var(--warn);border-radius:8px;padding:9px 12px;font-size:12px;font-weight:500;line-height:1.35}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:8px;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--line)}
@@ -72,6 +73,7 @@ nav svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stro
 <section id="p-drugs" class="hide">
   <h2>Drugs</h2>
   <p class="small">Tap a drug to calculate. Brands and strengths are not yet checked against the DRAP registry.</p>
+  <div class="chips" id="cats"></div>
   <div class="list" id="dl"></div>
 </section>
 
@@ -87,6 +89,7 @@ nav svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stro
       <li>Renal and hepatic adjustment is not built in yet. Adjust manually.</li>
       <li>Brands and strengths must be checked against the DRAP registry.</li>
       <li>Anaesthesia drugs (relaxants, reversal, atropine) give a single bolus for the standard indication only. Dose is not a substitute for titration to effect and monitoring.</li>
+      <li>Diabetes, blood pressure and heart drugs are adult OPD doses from BNF 82 (September 2021). The dose shown is the usual starting dose. Titration, renal function and drug interactions need clinical review.</li>
     </ul>
   </div>
   <h2>Planned</h2>
@@ -293,15 +296,87 @@ var D=[
  forms:[{n:"Injection 100 mg/mL",mg:100,ml:1}],
  child:{mgkg:10,n:3,max:1000,maxDay:3000,gap:"8 hourly"},
  adult:{mg:1000,n:3,maxDay:3000,gap:"8 hourly"},
- notes:["Dose for inhibition of fibrinolysis. Give by slow IV injection over at least 10 minutes. Trauma and postpartum haemorrhage regimens differ.","Reduce the dose in renal impairment. Avoid in active thromboembolic disease and with convulsion risk at high doses."]}
+ notes:["Dose for inhibition of fibrinolysis. Give by slow IV injection over at least 10 minutes. Trauma and postpartum haemorrhage regimens differ.","Reduce the dose in renal impairment. Avoid in active thromboembolic disease and with convulsion risk at high doses."]},
+
+/* ---- v0.7 additions: diabetes, blood pressure and heart (adult, BNF 82 September 2021) ---- */
+{id:"mfm",n:"Metformin",alt:"glucophage diabetes sugar type 2",cls:"Antidiabetic (biguanide)",route:"PO",brands:["Glucophage"],src:"Source: BNF 82 (September 2021) metformin monograph (checked: adult immediate-release 500 mg once daily, stepped up to 500 mg three times a day, max 2 g/day; modified-release up to 2 g once daily). Adults only. Verify before use.",
+ regimens:[
+ {label:"Immediate-release tablets",forms:[{n:"Tablet 500 mg",t:"Tablet",mg:500,tab:1}],child:null,
+  adult:{mg:500,n:1,maxDay:2000,gap:"24 hourly",when:"with breakfast",range:"500 mg once daily, then twice daily, then three times daily with meals. Max 2 g/day"},
+  notes:["Titration (BNF): week 1 500 mg once daily with breakfast, week 2 500 mg twice daily with breakfast and evening meal, then 500 mg three times daily with meals."]},
+ {label:"Modified-release tablets",forms:[{n:"MR tablet 500 mg",t:"MR tablet",mg:500,tab:1}],child:null,
+  adult:{mg:500,n:1,maxDay:2000,gap:"24 hourly",when:"with the evening meal",range:"500 mg once daily, increased every 10 to 15 days up to 2 g once daily"},
+  notes:["BNF: increase gradually every 10 to 15 days, up to 2 g once daily with the evening meal. If control is still not achieved, change to standard-release tablets."]}],
+ notes:["Adults only in this app. BNF allows 10 to 17 years under specialist care only.","Check eGFR before starting and during use. Renal adjustment is not built in.","Take with or after food to reduce stomach upset."]},
+{id:"gli",n:"Gliclazide",alt:"diamicron sulfonylurea diabetes sugar",cls:"Antidiabetic (sulfonylurea)",route:"PO",brands:["Diamicron"],src:"Source: BNF 82 (September 2021) gliclazide monograph (checked: immediate-release 40 to 80 mg daily, up to 160 mg once daily, max 320 mg/day; modified-release 30 mg daily, max 120 mg/day). Adults only. Verify before use.",
+ regimens:[
+ {label:"Immediate-release tablets",forms:[{n:"Tablet 40 mg",t:"Tablet",mg:40,tab:1},{n:"Tablet 80 mg",t:"Tablet",mg:80,tab:1}],child:null,
+  adult:{mg:40,n:1,maxDay:320,gap:"24 hourly",when:"with breakfast",range:"40 to 80 mg daily to start, up to 160 mg once daily. Above 160 mg, divide the dose. Max 320 mg/day"},
+  notes:["Dose shown is the lower end of the BNF starting range (40 to 80 mg daily). Adjust to response."]},
+ {label:"Modified-release tablets",forms:[{n:"MR tablet 30 mg",t:"MR tablet",mg:30,tab:1}],child:null,
+  adult:{mg:30,n:1,maxDay:120,gap:"24 hourly",when:"with breakfast",range:"30 mg daily, adjusted every 4 weeks (after 2 weeks if no fall in blood glucose). Max 120 mg/day"},
+  notes:["BNF: modified-release 30 mg is about equivalent to standard gliclazide 80 mg."]}],
+ notes:["Adults only. Risk of hypoglycaemia: skipping meals is dangerous.","BNF: avoid where possible in acute porphyrias. Avoid in pregnancy and breast feeding.","Can be used in renal impairment with careful blood glucose monitoring (BNF)."]},
+{id:"amlo",n:"Amlodipine",alt:"norvasc calcium channel blocker blood pressure bp hypertension angina",cls:"Calcium-channel blocker",route:"PO",brands:["Norvasc"],src:"Source: BNF 82 (September 2021) amlodipine monograph (checked: adult hypertension and angina prophylaxis, initially 5 mg once daily, max 10 mg/day). Adults only. Verify before use.",
+ forms:[{n:"Tablet 5 mg",mg:5,tab:1},{n:"Tablet 10 mg",mg:10,tab:1}],
+ child:null,
+ adult:{mg:5,n:1,maxDay:10,gap:"24 hourly",range:"5 mg once daily to start. Max 10 mg/day"},
+ notes:["Same starting dose for hypertension and angina prophylaxis.","Common side effects: ankle swelling, flushing, headache.","BNF safe practice: amlodipine has been confused with atenolol and nimodipine. Check the name on the pack."]},
+{id:"enal",n:"Enalapril",alt:"innovace ace inhibitor blood pressure bp hypertension heart failure",cls:"ACE inhibitor",route:"PO",brands:["Innovace"],src:"Source: BNF 82 (September 2021) enalapril monograph (checked: hypertension initially 5 mg once daily, maintenance 20 mg once daily, max 40 mg/day). Adults only. Verify before use.",
+ forms:[{n:"Tablet 2.5 mg",mg:2.5,tab:1},{n:"Tablet 5 mg",mg:5,tab:1},{n:"Tablet 10 mg",mg:10,tab:1},{n:"Tablet 20 mg",mg:20,tab:1}],
+ child:null,
+ adult:{mg:5,n:1,maxDay:40,gap:"24 hourly",range:"5 mg once daily to start, usual maintenance 20 mg once daily. Max 40 mg/day"},
+ notes:["Hypertension dose only. BNF heart failure regimen is different: start 2.5 mg once daily under close medical supervision.","Use a lower starting dose with a diuretic or in renal impairment (BNF).","Check urea, creatinine and potassium. Stop in pregnancy. Dry cough is common."]},
+{id:"los",n:"Losartan",alt:"cozaar arb blood pressure bp hypertension",cls:"Angiotensin-II receptor blocker",route:"PO",brands:["Cozaar"],src:"Source: BNF 82 (September 2021) losartan monograph (checked: hypertension 18 to 75 years initially 50 mg once daily, then 100 mg if needed; 76 years and over initially 25 mg once daily). Adults only. Verify before use.",
+ forms:[{n:"Tablet 25 mg",mg:25,tab:1},{n:"Tablet 50 mg",mg:50,tab:1},{n:"Tablet 100 mg",mg:100,tab:1}],
+ child:null,
+ adult:{n:1,maxDay:100,gap:"24 hourly",range:"50 mg once daily for several weeks, then 100 mg once daily if needed",
+  fn:function(m,w){return m>=912?{mg:25,why:"76 years and over: initially 25 mg once daily (BNF)"}:{mg:50,why:"18 to 75 years: initially 50 mg once daily (BNF)"}}},
+ notes:["Hypertension dose only. Diabetic nephropathy and heart failure regimens differ.","Check potassium and renal function. Stop in pregnancy."]},
+{id:"biso",n:"Bisoprolol",alt:"concor cardicor beta blocker blood pressure bp hypertension angina heart failure",cls:"Beta-blocker (cardioselective)",route:"PO",brands:["Concor","Cardicor"],src:"Source: BNF 82 (September 2021) bisoprolol monograph (checked: hypertension and angina 5 to 10 mg once daily, max 20 mg/day). Adults only. Verify before use.",
+ forms:[{n:"Tablet 2.5 mg",mg:2.5,tab:1},{n:"Tablet 5 mg",mg:5,tab:1},{n:"Tablet 10 mg",mg:10,tab:1}],
+ child:null,
+ adult:{mg:5,n:1,maxDay:20,gap:"24 hourly",when:"in the morning",range:"5 to 10 mg once daily. Max 20 mg/day"},
+ notes:["Hypertension and angina dose. BNF heart failure regimen is different: start 1.25 mg once daily and increase slowly up to 10 mg.","Avoid in asthma or severe airways disease, heart block and bradycardia. Do not stop suddenly."]},
+{id:"inda",n:"Indapamide",alt:"natrilix thiazide-like diuretic blood pressure bp hypertension",cls:"Thiazide-like diuretic",route:"PO",brands:["Natrilix"],src:"Source: BNF 82 (September 2021) indapamide monograph (checked: essential hypertension, immediate-release 2.5 mg daily, modified-release 1.5 mg daily, taken in the morning). Adults only. Verify before use.",
+ regimens:[
+ {label:"Immediate-release tablets",forms:[{n:"Tablet 2.5 mg",t:"Tablet",mg:2.5,tab:1}],child:null,
+  adult:{mg:2.5,n:1,maxDay:2.5,gap:"24 hourly",when:"in the morning",range:"2.5 mg once daily"},notes:[]},
+ {label:"Modified-release tablets",forms:[{n:"MR tablet 1.5 mg",t:"MR tablet",mg:1.5,tab:1}],child:null,
+  adult:{mg:1.5,n:1,maxDay:1.5,gap:"24 hourly",when:"in the morning",range:"1.5 mg once daily"},notes:[]}],
+ notes:["Hypertension dose. Check sodium, potassium and uric acid. Avoid in severe renal impairment and gout."]},
+{id:"clop",n:"Clopidogrel",alt:"plavix antiplatelet heart stroke stent",cls:"Antiplatelet",route:"PO",brands:["Plavix"],src:"Source: BNF 82 (September 2021) clopidogrel monograph (checked: secondary prevention 75 mg once daily; loading 300 mg or 600 mg before PCI). Adults only. Verify before use.",
+ forms:[{n:"Tablet 75 mg",mg:75,tab:1},{n:"Tablet 300 mg",mg:300,tab:1}],
+ child:null,
+ adult:{mg:75,n:1,maxDay:75,gap:"24 hourly",range:"75 mg once daily"},
+ notes:["Maintenance dose for secondary prevention (peripheral arterial disease, after MI or ischaemic stroke). Loading doses are for specialist use before PCI.","Bleeding risk. Do not stop early after a stent without cardiology advice."]},
+{id:"asp",n:"Aspirin (low dose)",alt:"disprin loprin antiplatelet heart stroke 75 mg",cls:"Antiplatelet",route:"PO",brands:["Disprin"],src:"Source: BNF 82 (September 2021) aspirin monograph (checked: cardiovascular disease secondary prevention 75 mg daily; suspected ACS 300 mg chewed). Adults only. Verify before use.",
+ forms:[{n:"Tablet 75 mg",mg:75,tab:1},{n:"Tablet 100 mg",mg:100,tab:1}],
+ child:null,
+ adult:{mg:75,n:1,maxDay:300,gap:"24 hourly",when:"after food",range:"75 mg once daily"},
+ notes:["Secondary prevention dose. In suspected acute coronary syndrome BNF gives 300 mg chewed or dispersed in water as a single dose (emergency, not OPD).","Not for children under 16 (Reye syndrome). Avoid in active peptic ulcer; consider a PPI if at risk of bleeding."]},
+{id:"ator",n:"Atorvastatin",alt:"lipitor statin cholesterol lipid",cls:"Statin",route:"PO",brands:["Lipitor"],src:"Source: BNF 82 (September 2021) atorvastatin monograph (checked: hypercholesterolaemia usual 10 mg once daily up to 80 mg; primary prevention 20 mg once daily). Adults only. Verify before use.",
+ forms:[{n:"Tablet 10 mg",mg:10,tab:1},{n:"Tablet 20 mg",mg:20,tab:1},{n:"Tablet 40 mg",mg:40,tab:1},{n:"Tablet 80 mg",mg:80,tab:1}],
+ child:null,
+ adult:{mg:10,n:1,maxDay:80,gap:"24 hourly",range:"10 mg once daily (usual). Up to 80 mg once daily, increased at 4-week intervals"},
+ notes:["Hypercholesterolaemia dose. BNF primary prevention in high-risk patients: 20 mg once daily, increased if needed.","Check liver enzymes before and during treatment. Report unexplained muscle pain. Avoid in pregnancy."]},
+{id:"simva",n:"Simvastatin",alt:"zocor statin cholesterol lipid",cls:"Statin",route:"PO",brands:["Zocor"],src:"Source: BNF 82 (September 2021) simvastatin monograph (checked: hypercholesterolaemia 10 to 20 mg once daily at night, up to 80 mg; 80 mg only for severe cases at high risk). Adults only. Verify before use.",
+ forms:[{n:"Tablet 10 mg",mg:10,tab:1},{n:"Tablet 20 mg",mg:20,tab:1},{n:"Tablet 40 mg",mg:40,tab:1}],
+ child:null,
+ adult:{mg:20,n:1,maxDay:80,gap:"24 hourly",when:"at night",range:"10 to 20 mg once daily at night (20 mg shown). Up to 80 mg only in severe cases"},
+ notes:["Take at night. Dose shown is the upper end of the BNF starting range of 10 to 20 mg.","Many interactions (amlodipine, clarithromycin, azole antifungals, grapefruit juice). Report unexplained muscle pain."]}
 
 ];
-var cur=null,ty="",ci=0,epi=false,REC=[];
+var CAT={para:"Pain and fever",ibu:"Pain and fever",dic:"Pain and fever",mef:"Pain and fever",ket:"Pain and fever",amox:"Antibiotics",cef:"Antibiotics",azi:"Antibiotics",met:"Antibiotics",cfx:"Antibiotics",cam:"Antibiotics",cot:"Antibiotics",cfr:"Antibiotics",cla:"Antibiotics",alb:"Antiparasitic",ond:"Stomach and nausea",mcp:"Stomach and nausea",dom:"Stomach and nausea",ome:"Stomach and nausea",cet:"Allergy",lor:"Allergy",zn:"Other",txa:"Other",lido:"Anaesthesia",bupi:"Anaesthesia",roc:"Anaesthesia",sux:"Anaesthesia",atr:"Anaesthesia",neo:"Anaesthesia",dex:"Anaesthesia",ketam:"Anaesthesia",prop:"Anaesthesia",atra:"Anaesthesia",gly:"Anaesthesia",nal:"Anaesthesia",mfm:"Diabetes",gli:"Diabetes",amlo:"Heart and BP",enal:"Heart and BP",los:"Heart and BP",biso:"Heart and BP",inda:"Heart and BP",clop:"Heart and BP",asp:"Heart and BP",ator:"Heart and BP",simva:"Heart and BP"};
+var CATS=["All","Antibiotics","Pain and fever","Stomach and nausea","Allergy","Antiparasitic","Anaesthesia","Diabetes","Heart and BP","Other"];
+var cur=null,ty="",ci=0,epi=false,REC=[],catSel="All",tyAuto=true;
 var $=function(i){return document.getElementById(i)};
 function r1(x){return Math.round(x*10)/10}
 function fmt(x){if(x>=100)return String(Math.round(x));if(x>=10)return String(r1(x));return String(Math.round(x*100)/100)}
 function match(d,s){s=s.toLowerCase();return d.n.toLowerCase().indexOf(s)>-1||d.brands.join(" ").toLowerCase().indexOf(s)>-1||(d.alt||"").toLowerCase().indexOf(s)>-1}
 function types(d){var t=[];(d.forms||[]).forEach(function(f){var k=f.t||f.n.split(" ")[0];if(t.indexOf(k)<0)t.push(k)});return t}
+function adultOnly(d){if(d.regimens)return d.regimens.every(function(r){return !r.child});return !d.child}
+function freq(r,g){if(r.gap==="single dose")return "as a single dose";var n=r.n,w=n===1?"once a day (OD)":n===2?"twice a day (BD)":n===3?"three times a day (TDS)":n===4?"four times a day (QID)":n+" times a day";return g?w+" · "+r.gap:w}
 function loadRec(){try{REC=JSON.parse(localStorage.getItem("rec")||"[]")}catch(e){REC=[]}}
 function saveRec(id){REC=[id].concat(REC.filter(function(x){return x!==id})).slice(0,6);try{localStorage.setItem("rec",JSON.stringify(REC))}catch(e){}}
 function sugg(){var s=$("q").value.trim(),h="",L;
@@ -309,9 +384,9 @@ function sugg(){var s=$("q").value.trim(),h="",L;
  else{L=REC.map(function(id){return D.filter(function(d){return d.id===id})[0]}).filter(Boolean);h=L.length?'<span class="small" style="width:100%">Recent</span>':'<span class="small">Search a drug to start. Recently used drugs will appear here.</span>'}
  L.forEach(function(d){var b=s?d.brands.filter(function(x){return x.toLowerCase().indexOf(s.toLowerCase())>-1})[0]:"";h+='<button class="chip" data-id="'+d.id+'">'+d.n+(b&&d.n.toLowerCase().indexOf(s.toLowerCase())<0?' ('+b+')':'')+'</button>'});
  $("sugg").innerHTML=h}
-function pick(id){cur=D.filter(function(d){return d.id===id})[0];ty=types(cur)[0]||"";SRC=cur.src||SRC0;ci=0;epi=false;
+function pick(id){cur=D.filter(function(d){return d.id===id})[0];ty=types(cur)[0]||"";tyAuto=true;SRC=cur.src||SRC0;ci=0;epi=false;
  $("sel").classList.remove("hide");$("dn").textContent=cur.n;
- $("dm").textContent=cur.cls+" · "+cur.route+(cur.brands.length?" · Brands: "+cur.brands.join(", "):"");$("out").innerHTML="";opts()}
+ $("dm").textContent=cur.cls+" · "+cur.route+(cur.brands.length?" · Brands: "+cur.brands.join(", "):"")+(adultOnly(cur)&&!cur.local?" · Adult only":"");$("out").innerHTML="";opts()}
 function opts(){var h="";
  if(cur.local){h+='<label>Concentration</label><div class="chips">'+cur.conc.map(function(c,i){return '<button class="chip'+(i===ci?' on':'')+'" data-c="'+i+'">'+c.n+'</button>'}).join("")+'</div>';
   h+='<label>Adrenaline</label><div class="chips"><button class="chip'+(!epi?' on':'')+'" data-e="0">Plain</button><button class="chip'+(epi?' on':'')+'" data-e="1">With adrenaline</button></div>'}
@@ -336,18 +411,19 @@ function one(c,tyf,m,w,adult){
  var daily=dose*rule.n,md=rule.maxDay||Infinity;
  if(rule.maxDayKg)md=Math.min(md,rule.maxDayKg*w);
  if(daily>md){var allowed=Math.floor(md/dose);st="bad";warns.push("Daily total "+fmt(daily)+" mg exceeds the maximum "+fmt(md)+" mg/day. "+(allowed>0?"Reduce to "+allowed+" dose(s) per day or lower the dose.":"Lower the dose."))}
- var fq=rule.gap==="single dose"?"once only":rule.n+" time"+(rule.n>1?"s":"")+"/day",rows="";
+ var fw=freq(rule,true),wh=rule.when?", "+rule.when:"",rows="";
  c.forms.filter(function(f){return tyf===null||(f.t||f.n.split(" ")[0])===tyf}).forEach(function(f){var amt;
   if(f.adultOnly&&!adult){amt="Not for children"}
-  else if(f.tab){var cap=f.n.indexOf("Capsule")===0,t=cap?Math.floor(dose/f.mg+0.05):Math.round(dose/f.mg*2)/2;amt=t<(cap?1:.5)?"Too small for this strength. Use a smaller strength or a liquid form.":t+" "+(cap?"capsule":"tablet")+(t>1?"s":"")+" = "+fmt(t*f.mg)+" mg, "+rule.gap+" ("+fq+")"+(Math.abs(t*f.mg-dose)>dose*0.1?" ⚠ calculated dose is "+fmt(dose)+" mg":"")}
-  else if(f.vial){var v=r1(dose/f.mg);amt=v+" vial"+(v>1?"s":"")+" of "+f.mg+" mg, "+rule.gap}
-  else{amt=r1(dose/f.mg*f.ml)+" mL, "+rule.gap+" ("+fq+")"}
+  else if(f.tab){var cap=f.n.indexOf("Capsule")===0,t=cap?Math.floor(dose/f.mg+0.05):Math.round(dose/f.mg*2)/2;amt=t<(cap?1:.5)?"Too small for this strength. Use a smaller strength or a liquid form.":"Take "+t+" "+(cap?"capsule":"tablet")+(t>1?"s":"")+" ("+fmt(t*f.mg)+" mg), "+fw+wh+(Math.abs(t*f.mg-dose)>dose*0.1?" ⚠ calculated dose is "+fmt(dose)+" mg":"")}
+  else if(f.vial){var v=r1(dose/f.mg);amt="Give "+v+" vial"+(v>1?"s":"")+" of "+f.mg+" mg, "+fw}
+  else{amt="Give "+r1(dose/f.mg*f.ml)+" mL, "+fw+wh}
   rows+='<div class="kv"><span>'+f.n+'</span><span>'+amt+'</span></div>'});
- var line=c.n+" "+fmt(dose)+" mg "+c.route.split(" /")[0]+", "+rule.gap+(rule.gap==="single dose"?"":" ("+rule.n+" dose"+(rule.n>1?"s":"")+"/day)");
+ var line=c.n+" "+fmt(dose)+" mg "+c.route.split(" /")[0]+", "+freq(rule,false);
  var h='<p class="rx">'+line+'</p><div class="big">'+fmt(dose)+' mg</div><div class="small">per dose · '+basis+'</div>'
- +'<div class="small" style="margin-top:10px">Amount to give'+(tyf?' · '+tyf:'')+'</div>'+rows
+ +'<div class="small" style="margin-top:10px">How to take'+(tyf?' · '+tyf:'')+'</div>'+rows
  +'<div class="kv"><span>Daily total</span><span>'+fmt(daily)+' mg</span></div>'
  +'<div class="kv"><span>Max daily dose</span><span>'+(md===Infinity?'Not set in this draft':fmt(md)+' mg')+'</span></div>'
+ +(rule.range?'<div class="kv"><span>Usual range</span><span>'+rule.range+'</span></div>':'')
  +'<div class="kv"><span>Calculation</span><span>'+calc+'</span></div>';
  return{st:st,h:h,warns:warns}}
 function calc(){
@@ -360,6 +436,7 @@ function calc(){
  if(m>1440)return bad("Age looks too high ("+fmt(m/12)+" years). Check the value or unit.");
  saveRec(cur.id);
  var adult=m>=216,w0=[];
+ if(tyAuto&&!cur.local&&!cur.regimens){var tl=types(cur),nt=(adult&&tl.indexOf("Tablet")>-1)?"Tablet":tl[0];if(nt&&nt!==ty){ty=nt;opts()}}
  if(m<12&&w>15)w0.push("Weight "+w+" kg looks high for an infant. Confirm the weight.");
  if(adult&&w<30)w0.push("Adult age with weight under 30 kg. Confirm the weight.");
  if(cur.local)return local(w,w0);
@@ -385,13 +462,17 @@ function local(w,warns){
  +'<div class="kv"><span>Calculation</span><span>'+calc+'</span></div>';
  h+='<ul class="w">'+warns.concat(cur.notes).map(function(x){return '<li>'+x+'</li>'}).join("")+'</ul>'+tagb()+'';
  show(st,h)}
-function drugs(){$("dl").innerHTML=D.map(function(d){return '<button data-id="'+d.id+'"><span class="drug">'+d.n+'</span><br><span class="small">'+d.cls+(d.brands.length?' · '+d.brands.join(", "):'')+'</span></button>'}).join("")}
+function drugs(){
+ $("cats").innerHTML=CATS.map(function(c){return '<button class="chip'+(c===catSel?' on':'')+'" data-cat="'+c+'">'+c+'</button>'}).join("");
+ var L=D.filter(function(d){return catSel==="All"||CAT[d.id]===catSel});
+ $("dl").innerHTML=L.length?L.map(function(d){return '<button data-id="'+d.id+'"><span class="drug">'+d.n+'</span>'+(adultOnly(d)&&!d.local?'<span class="tag ad">Adult only</span>':'')+'<br><span class="small">'+d.cls+(d.brands.length?' · '+d.brands.join(", "):'')+'</span></button>'}).join(""):'<p class="small">No drugs in this group yet.</p>'}
 function tab(t){["calc","drugs","info"].forEach(function(k){$("p-"+k).classList.toggle("hide",k!==t)});
  document.querySelectorAll("nav button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-t")===t)});window.scrollTo(0,0)}
 document.addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;
  if(b.dataset.t)tab(b.dataset.t);
+ else if(b.dataset.cat!==undefined){catSel=b.dataset.cat;drugs()}
  else if(b.dataset.id){pick(b.dataset.id);tab("calc");$("q").value=cur.n;sugg()}
- else if(b.dataset.f!==undefined){ty=b.dataset.f;opts();if($("out").innerHTML)calc()}
+ else if(b.dataset.f!==undefined){ty=b.dataset.f;tyAuto=false;opts();if($("out").innerHTML)calc()}
  else if(b.dataset.c!==undefined){ci=+b.dataset.c;opts()}
  else if(b.dataset.e!==undefined){epi=b.dataset.e==="1";opts()}
  else if(b.dataset.th){theme(b.dataset.th,true)}
