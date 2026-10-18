@@ -42,6 +42,8 @@ nav button{flex:1;max-width:170px;border:1px solid var(--line);background:var(--
 nav button.on{background:var(--btn);color:var(--btnfg);border-color:var(--btn)}
 nav svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .hide{display:none}
+.back{display:inline-flex;align-items:center;gap:4px;margin-top:14px;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;padding:8px 14px 8px 8px;font:inherit;font-size:14px;font-weight:500;cursor:pointer}
+.back svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .small{font-size:13px;color:var(--mut)}
 .list button{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:10px;color:var(--fg);font:inherit;cursor:pointer}
 </style>
@@ -58,6 +60,7 @@ nav svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stro
   <input id="q" type="search" placeholder="Search generic or brand name" autocomplete="off">
   <div class="chips" id="sugg"></div>
   <div id="sel" class="hide">
+    <button class="back" id="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Back to search</button>
     <div class="card"><div class="drug" id="dn" style="font-size:20px"></div><div class="small" id="dm"></div></div>
     <div class="row">
       <div><label for="age">Age</label><input id="age" type="number" inputmode="decimal" min="0" step="any"></div>
@@ -376,7 +379,7 @@ function fmt(x){if(x>=100)return String(Math.round(x));if(x>=10)return String(r1
 function match(d,s){s=s.toLowerCase();return d.n.toLowerCase().indexOf(s)>-1||d.brands.join(" ").toLowerCase().indexOf(s)>-1||(d.alt||"").toLowerCase().indexOf(s)>-1}
 function types(d){var t=[];(d.forms||[]).forEach(function(f){var k=f.t||f.n.split(" ")[0];if(t.indexOf(k)<0)t.push(k)});return t}
 function adultOnly(d){if(d.regimens)return d.regimens.every(function(r){return !r.child});return !d.child}
-function freq(r,g){if(r.gap==="single dose")return "as a single dose";var n=r.n,w=n===1?"once a day (OD)":n===2?"twice a day (BD)":n===3?"three times a day (TDS)":n===4?"four times a day (QID)":n+" times a day";return g?w+" · "+r.gap:w}
+function freq(r,g){if(r.gap==="single dose")return "as a single dose";var n=r.n,w=n===1?"OD":n===2?"BD":n===3?"TDS":n===4?"QID":n+" times a day";return g?w+" · "+r.gap:w}
 function loadRec(){try{REC=JSON.parse(localStorage.getItem("rec")||"[]")}catch(e){REC=[]}}
 function saveRec(id){REC=[id].concat(REC.filter(function(x){return x!==id})).slice(0,6);try{localStorage.setItem("rec",JSON.stringify(REC))}catch(e){}}
 function sugg(){var s=$("q").value.trim(),h="",L;
@@ -476,7 +479,8 @@ document.addEventListener("click",function(e){var b=e.target.closest("button");i
  else if(b.dataset.c!==undefined){ci=+b.dataset.c;opts()}
  else if(b.dataset.e!==undefined){epi=b.dataset.e==="1";opts()}
  else if(b.dataset.th){theme(b.dataset.th,true)}
- else if(b.id==="go")calc()});
+ else if(b.id==="go")calc();
+ else if(b.id==="back"){$("sel").classList.add("hide");$("out").innerHTML="";$("q").value="";sugg();window.scrollTo(0,0);$("q").focus()}});
 $("q").addEventListener("input",sugg);
 function theme(t,s){var r=document.documentElement;if(t==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",t);document.querySelectorAll("#thm .chip").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-th")===t)});if(s){try{localStorage.setItem("theme",t)}catch(e){}}}
 var th="light";try{th=localStorage.getItem("theme")||"light"}catch(e){}theme(th,false);
